@@ -197,10 +197,13 @@ N("nean", "erectus", "Неандерталец", "biped", "land", "omni", 4.9, [
 N("sapiens", "erectus", "Человек разумный", "biped", "land", "omni", 4.8, [25, 45, 60], "Это вы! Путь от одной клетки длиной почти 4 миллиарда лет.", { clothes: 1 });
 
 // ---------- Связи ----------
+// Вызывается один раз, когда загружены все существа (в конце animals.js).
 const BY_ID = {};
-for (const n of TREE) { n.kids = []; BY_ID[n.id] = n; }
-for (const n of TREE) if (n.parent) BY_ID[n.parent].kids.push(n);
-for (const n of TREE) { let d = 0, p = n; while (p.parent) { d++; p = BY_ID[p.parent]; } n.depth = d; }
-(function countDesc(n) { n.desc_n = 0; for (const k of n.kids) n.desc_n += 1 + countDesc(k); return n.desc_n; })(BY_ID.luca);
 const TREE_ORDER = [];
-(function walk(n) { TREE_ORDER.push(n); n.kids.forEach(walk); })(BY_ID.luca);
+function linkTree() {
+  for (const n of TREE) { n.kids = []; BY_ID[n.id] = n; }
+  for (const n of TREE) if (n.parent) BY_ID[n.parent].kids.push(n);
+  for (const n of TREE) { let d = 0, p = n; while (p.parent) { d++; p = BY_ID[p.parent]; } n.depth = d; }
+  (function countDesc(n) { n.desc_n = 0; for (const k of n.kids) n.desc_n += 1 + countDesc(k); return n.desc_n; })(BY_ID.luca);
+  (function walk(n) { TREE_ORDER.push(n); n.kids.forEach(walk); })(BY_ID.luca);
+}

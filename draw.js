@@ -39,6 +39,7 @@ function wavy(g, x0, y0, len, amp, ph, w0, w1, color, n = 10) {
 
 function drawCreature(g, n, r, t, mv = 0.5) {
   g.save();
+  if (n.hy) drawHybridBack(g, n, r, t, mv); // черты гибрида: крылья, ноги, щупальца (hybrid.js)
   switch (n.body) {
     case "cell": drawCell(g, n, r, t, mv); break;
     case "bacteria": drawBacteria(g, n, r, t, mv); break;
@@ -57,6 +58,7 @@ function drawCreature(g, n, r, t, mv = 0.5) {
     case "bird": drawBird(g, n, r, t, mv); break;
     case "ape": case "biped": drawHominid(g, n, r, t, mv); break;
   }
+  if (n.hy) drawHybridFront(g, n, r, t, mv); // панцирь, иглы, рога, узор
   g.restore();
 }
 
@@ -570,7 +572,8 @@ function drawTail(g, n, r, t, mv, x0) {
     for (let a = 0; a < 9; a += 0.3) { const rr = r * 0.2 * (1 - a / 10), px = x0 - r * 0.25 + Math.cos(a) * rr, py = Math.sin(a) * rr; a ? g.lineTo(px, py) : g.moveTo(x0, 0); }
     g.stroke(); return;
   }
-  const w0 = r * (f.tailW ?? (f.sprawl ? 0.22 : 0.1)), w1 = f.bushy ? w0 * 0.6 : r * 0.03;
+  // у ящеров и двуногих динозавров хвост толстый у основания
+  const w0 = r * (f.tailW ?? (f.sprawl || f.biped ? 0.22 : 0.1)), w1 = f.bushy ? w0 * 0.6 : r * 0.03;
   const amp = r * (f.sprawl ? 0.35 : 0.25) * (0.4 + 0.6 * mv), ph = t * (f.sprawl ? 6 : 5);
   if (f.bushy) {
     const N = 7;

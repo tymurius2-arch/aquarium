@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Эволюция: от клетки до человека</title>
-<meta name="description" content="Играй за первую клетку и эволюционируй: выбирай, в кого превратиться, и пройди путь до человека, собаки, мыши, гориллы или одного из 160 существ.">
+<title>Эволюция: от клетки до гибридов</title>
+<meta name="description" content="Играй за первую клетку и эволюционируй: выбирай, в кого превратиться, и пройди путь до человека, собаки, мыши, гориллы или одного из 1300 существ. Ешь всех, кто меньше, и создавай гибриды.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
@@ -93,7 +93,29 @@
   .cell.unk i { display: block; height: 52px; line-height: 52px; font-style: normal; font-size: 22px; }
   .big-n { font-size: 40px; font-weight: 700; color: var(--accent); }
 
+  .pts { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+  .pt { font-size: 11px; padding: 3px 7px; border-radius: 99px; background: rgba(255,255,255,.07); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pt b { color: var(--ink); font-weight: 500; }
+  .pt.on { background: rgba(79,224,192,.18); color: var(--accent); }
+  .pt.on b { color: var(--accent); }
+  input.search { width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin-bottom: 12px; outline: none; -webkit-user-select: text; user-select: text; }
+  input.search:focus { border-color: rgba(79,224,192,.6); }
+  .lab { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; }
+  .lab .prev { display: flex; flex-direction: column; gap: 8px; }
+  .lab .prev canvas { width: 100%; height: 190px; border-radius: 12px; }
+  .lab .prev h3 { margin: 0; font-size: 18px; }
+  .lab .prev p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .partners { display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; max-height: 52vh; overflow-y: auto; }
+  .partners button { font-size: 12px; padding: 6px 9px; }
+  .partners button.sel { background: var(--accent); color: #022; border-color: transparent; }
+  .partners button small { color: var(--en); margin-left: 4px; }
+  .partners button.sel small { color: #022; }
+  .more { width: 100%; margin-top: 4px; }
   @media (max-width: 700px) {
+    .lab { grid-template-columns: 1fr; }
+    .lab .prev canvas { height: 130px; }
+    .partners { max-height: 30vh; }
+    .pts { margin-top: 5px; }
     .hud { left: 8px; right: 8px; top: 8px; width: auto; padding: 10px; }
     .who canvas { width: 44px; height: 44px; }
     .who { margin-bottom: 6px; }
@@ -124,8 +146,10 @@
   <div class="bar"><span>Здоровье</span><div class="track"><div class="fill" id="hpFill" style="background:var(--hp)"></div></div><em id="hpTxt">100</em></div>
   <div class="bar"><span>Энергия</span><div class="track"><div class="fill" id="enFill" style="background:var(--en)"></div></div><em id="enTxt">80</em></div>
   <div class="bar"><span>ДНК</span><div class="track"><div class="fill" id="dnaFill" style="background:var(--dna)"></div></div><em id="dnaTxt">0/6</em></div>
+  <div class="pts" id="pts"></div>
   <div class="row">
     <button id="evoBtn">Эволюция</button>
+    <button id="hybBtn" title="Лаборатория гибридов (H)">Гибрид</button>
     <button id="pathBtn">Путь</button>
     <button id="pauseBtn" title="Пауза (P)">❚❚</button>
   </div>
@@ -138,8 +162,10 @@
   <div class="card glass">
     <h2>Эволюция</h2>
     <p class="lead">Вы — первая клетка в тёплом древнем океане. Ешьте, растите и копите <b>ДНК</b>. Когда её хватит — выберите, в кого превратиться дальше. Каждый выбор ведёт по своей ветке: можно стать человеком, собакой, мышью, гориллой, акулой, бабочкой или одним из <b id="totalN">160</b> существ.</p>
+    <p class="lead"><b>Ешьте всех, кто меньше вас</b> — за это дают ДНК и <b>гены</b> съеденного. Кем вы станете, зависит от еды: съешьте 100 растений 🌿 — станете <b>травоядным</b>, наберите 100 очков мяса 🍖 — <b>хищником</b>, и то и другое — <b>всеядным</b>. Эволюция в существо с вашим питанием дешевле.</p>
+    <p class="lead">Кнопка <b>«Гибрид»</b> — лаборатория: скрестите себя с любым существом и получите крысо-динозавра, акуло-орла или ещё одного из <b id="hybN">миллиона</b> гибридов.</p>
     <p class="lead">На каждой ступени играйте сколько хотите. Когда энергии много, клетка сама делится — это <b>митоз</b>, а у животных появляется потомство, которое следует за вами.</p>
-    <p class="lead"><b>Управление:</b> зажмите мышь или палец — существо поплывёт туда. На клавиатуре — WASD или стрелки. Пробел — рывок. E — эволюция, P — пауза.<br>Зелёная метка — это можно съесть. Красная — опасный хищник, убегайте.</p>
+    <p class="lead"><b>Управление:</b> зажмите мышь или палец — существо поплывёт туда. На клавиатуре — WASD или стрелки. Пробел — рывок. E — эволюция, H — гибрид, P — пауза.<br>Зелёная метка — это можно съесть. Красная — опасный хищник, убегайте.</p>
     <div class="foot">
       <button id="newBtn">Начать с клетки</button>
       <button id="contBtn" class="primary" hidden>Продолжить</button>
@@ -151,6 +177,7 @@
   <div class="card glass">
     <h2 id="evoTitle">Куда эволюционировать?</h2>
     <p class="lead" id="evoLead"></p>
+    <input class="search" id="evoSearch" placeholder="Найти по названию…" hidden>
     <div class="choices" id="choices"></div>
     <div class="foot"><button id="evoClose">Ещё поиграть</button></div>
   </div>
@@ -158,10 +185,32 @@
 
 <div class="modal" id="pathModal">
   <div class="card glass">
-    <div class="tabs"><button data-tab="path" class="on">Мой путь</button><button data-tab="coll">Коллекция</button></div>
+    <div class="tabs"><button data-tab="path" class="on">Мой путь</button><button data-tab="coll">Коллекция</button><button data-tab="hyb">Гибриды</button></div>
     <div id="pathTab"></div>
     <div id="collTab" hidden></div>
+    <div id="hybTab" hidden></div>
     <div class="foot"><button id="pathClose" class="primary">Играть</button></div>
+  </div>
+</div>
+
+<div class="modal" id="hybModal">
+  <div class="card glass">
+    <h2>Лаборатория гибридов</h2>
+    <p class="lead" id="hybLead"></p>
+    <div class="lab">
+      <div class="prev">
+        <canvas id="hybCanvas" width="600" height="380"></canvas>
+        <h3 id="hybName">Выберите существо</h3>
+        <p id="hybDesc"></p>
+        <div class="tags" id="hybTags"></div>
+        <button id="hybMake" class="primary" disabled>Создать гибрид</button>
+      </div>
+      <div>
+        <input class="search" id="hybSearch" placeholder="Найти: крыса, динозавр, акула, орёл…">
+        <div class="partners" id="partners"></div>
+      </div>
+    </div>
+    <div class="foot"><button id="hybClose">Закрыть</button></div>
   </div>
 </div>
 
@@ -179,7 +228,9 @@
 </div>
 
 <script src="tree.js"></script>
+<script src="animals.js"></script>
 <script src="draw.js"></script>
+<script src="hybrid.js"></script>
 <script>
 "use strict";
 // ---------- Константы ----------
@@ -205,18 +256,30 @@ const EATS = {
   berry: d => d === "herb" || d === "omni",
   bug: d => d === "carn" || d === "omni",
 };
+// Очки питания: что ешь — тем и становишься
+const FOOD_CAT = { org: "tiny", plankton: "tiny", algae: "plant", plant: "plant", berry: "plant", fry: "meat", bug: "meat" };
+const PTS = [["plant", "🌿", "растения"], ["meat", "🍖", "мясо"], ["tiny", "🦠", "мелочь"], ["sun", "☀️", "свет"]];
+const DIET_FROM = { plant: "herb", meat: "carn", tiny: "filter", sun: "photo" };
+const DIET_TITLE = { herb: "травоядный", carn: "хищник", omni: "всеядный", filter: "фильтратор", photo: "питается светом" };
+const NEED = 100;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = a => a[(Math.random() * a.length) | 0];
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const costOf = n => Math.round(12 + n.depth * 2.2);
+// цена эволюции в конкретное существо: с вашим питанием — на четверть дешевле
+const dietMatch = k => P.diet && (k.diet === P.diet || (P.diet === "omni" && (k.diet === "herb" || k.diet === "carn")));
+const costFor = k => Math.max(4, Math.round(costOf(node) * (dietMatch(k) ? 0.75 : 1)));
+const hybCost = b => Math.round((10 + node.depth * 1.5) * (genes[b.id] || disc.has(b.id) ? 1 : 2));
 const isCellLike = n => n.body === "cell" || n.body === "bacteria" || n.body === "colony";
 
 // ---------- Состояние ----------
 const cv = document.getElementById("world"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1, VS = 1;
 let node = BY_ID.luca, disc = new Set(["luca"]);
-const P = { x: WORLD / 2, y: WORLD / 2, vx: 0, vy: 0, ang: 0, hp: 100, en: 80, dna: 0, dashT: 0, dashCd: 0, inv: 0, mv: 0, t: 0, repro: 0 };
+const P = { x: WORLD / 2, y: WORLD / 2, vx: 0, vy: 0, ang: 0, hp: 100, en: 80, dna: 0, dashT: 0, dashCd: 0, inv: 0, mv: 0, t: 0, repro: 0, pts: { plant: 0, meat: 0, tiny: 0, sun: 0 }, diet: null };
+let genes = {}; // id существа → сколько раз съели (гены для гибридов)
+const effDiet = () => P.diet || node.diet;
 let npcs = [], food = [], kin = [], fx = [], floats = [], lights = [], decor = null;
 let paused = false, modalOpen = true, cam = { x: P.x, y: P.y, shake: 0 }, simT = 0, curHab = null;
 const keys = new Set(); const ptr = { down: false, x: 0, y: 0 };
@@ -224,10 +287,10 @@ let pool = [];
 
 // ---------- Сохранение ----------
 function save() {
-  try { localStorage.setItem("evo-save", JSON.stringify({ node: node.id, dna: P.dna, disc: [...disc] })); } catch (e) {}
+  try { localStorage.setItem("evo-save", JSON.stringify({ node: node.id, dna: P.dna, disc: [...disc], pts: P.pts, diet: P.diet, genes })); } catch (e) {}
 }
 function load() {
-  try { const s = JSON.parse(localStorage.getItem("evo-save")); if (s && BY_ID[s.node]) return s; } catch (e) {}
+  try { const s = JSON.parse(localStorage.getItem("evo-save")); if (s && getNode(s.node)) return s; } catch (e) {}
   return null;
 }
 
@@ -262,11 +325,9 @@ function buildPool() {
   cand.forEach(n => n._score = Math.abs(n.sz - S) * 1.1 + Math.abs(n.depth - D) * 0.12 + Math.random() * 0.8);
   cand.sort((a, b) => a._score - b._score);
   const chosen = cand.filter(n => Math.abs(n.sz - S) < 2.6).slice(0, 7);
-  // хищнику и всеядному нужна добыча помельче
-  if (node.diet === "carn" || node.diet === "omni") {
-    const prey = cand.filter(n => n.sz <= S - 0.35 && !chosen.includes(n)).slice(0, 3);
-    chosen.push(...prey);
-  }
+  // всем нужна добыча помельче — есть можно любого, кто меньше
+  const prey = cand.filter(n => n.sz <= S - 0.35 && !chosen.includes(n)).slice(0, 4);
+  chosen.push(...prey);
   // и пара хищников покрупнее, чтобы было от кого убегать
   const hunters = cand.filter(n => n.diet === "carn" && n.sz >= S + 0.6 && n.sz <= S + 2.8 && !chosen.includes(n)).slice(0, node.depth < 6 ? 1 : 2);
   chosen.push(...hunters);
@@ -274,7 +335,7 @@ function buildPool() {
   pool = chosen;
 }
 
-function edible(n) { return (node.diet === "carn" || node.diet === "omni") && n.sz <= node.sz - 0.3; }
+function edible(n) { return n.sz <= node.sz - 0.3; }
 function danger(n) { return (n.diet === "carn" && n.sz >= node.sz + 0.5) || (n.diet === "omni" && n.sz >= node.sz + 1.3); }
 
 function spawnNpc(far = true) {
@@ -287,7 +348,7 @@ function spawnNpc(far = true) {
 }
 function spawnFood(near) {
   const kinds = FOOD_KINDS[node.hab];
-  const mine = kinds.filter(k => EATS[k](node.diet));
+  const mine = kinds.filter(k => EATS[k](effDiet()));
   const kind = mine.length && Math.random() < 0.85 ? pick(mine) : pick(kinds);
   let x, y;
   if (near) { const a = rand(0, 6.28), d = rand(350, 900); x = clamp(P.x + Math.cos(a) * d, 20, WORLD - 20); y = clamp(P.y + Math.sin(a) * d, 20, WORLD - 20); }
@@ -329,9 +390,11 @@ function toast(msg, big) {
 // ---------- Управление ----------
 addEventListener("keydown", e => {
   if (e.repeat) { keys.add(e.code); return; }
+  if (e.target.tagName === "INPUT" && e.code !== "Escape") return;
   keys.add(e.code);
   if (e.code === "Space") { e.preventDefault(); dash(); }
   if (e.code === "KeyE" && !anyModal()) openEvolve();
+  if (e.code === "KeyH" && !anyModal()) openHybrid();
   if (e.code === "KeyP" || e.code === "Escape") { if (anyModal()) closeModals(); else togglePause(); }
 });
 addEventListener("keyup", e => keys.delete(e.code));
@@ -380,7 +443,7 @@ function step(dt) {
   if (node.diet === "photo") {
     let lit = node.hab === "land" ? 0.6 : 0;
     for (const L of lights) { const d = Math.hypot(P.x - L.x, P.y - L.y); if (d < L.r) lit = Math.max(lit, 1 - d / L.r * 0.6); }
-    if (lit > 0) { P.en += 9 * lit * dt; P.dna += 0.3 * lit * dt; P._lit = lit; } else P._lit = 0;
+    if (lit > 0) { P.en += 9 * lit * dt; P.dna += 0.3 * lit * dt; P._lit = lit; addPts("sun", 2 * lit * dt); } else P._lit = 0;
   }
   if (P.en <= 0) { P.en = 0; P.hp -= 6 * dt; }
   else if (P.en > 35) P.hp = Math.min(100, P.hp + 2.5 * dt);
@@ -397,21 +460,21 @@ function step(dt) {
     f.ph += dt;
     if (f.kind === "fry" || f.kind === "bug") {
       const d = Math.hypot(f.x - P.x, f.y - P.y);
-      if (d < 160 && EATS[f.kind](node.diet)) { f.vx += (f.x - P.x) / d * 160 * dt; f.vy += (f.y - P.y) / d * 160 * dt; }
+      if (d < 160) { f.vx += (f.x - P.x) / d * 160 * dt; f.vy += (f.y - P.y) / d * 160 * dt; }
       f.a += (Math.random() - 0.5) * 3 * dt; f.vx += Math.cos(f.a) * 40 * dt; f.vy += Math.sin(f.a) * 40 * dt;
       const s = Math.hypot(f.vx, f.vy), lim = f.kind === "fry" ? 90 : 55; if (s > lim) { f.vx *= lim / s; f.vy *= lim / s; }
       f.x = clamp(f.x + f.vx * dt, 10, WORLD - 10); f.y = clamp(f.y + f.vy * dt, 10, WORLD - 10);
     } else if (f.kind === "org" || f.kind === "plankton") { f.x += Math.sin(f.ph * 0.6) * 6 * dt; f.y += Math.cos(f.ph * 0.5) * 5 * dt; }
-    if (!EATS[f.kind](node.diet)) continue;
     let eater = null;
     if (Math.abs(f.x - P.x) < pr + 12 && Math.abs(f.y - P.y) < pr + 12 && Math.hypot(f.x - P.x, f.y - P.y) < pr + 8) eater = P;
     else for (const k of kin) if (Math.hypot(f.x - k.x, f.y - k.y) < k.r + 6) { eater = k; break; }
     if (eater) {
       food.splice(i, 1);
-      const big = f.kind === "fry" || f.kind === "bug" || f.kind === "berry";
-      P.en += big ? 12 : 8;
-      const g = eater === P ? (big ? 1 : 0.5) : 0.2; P.dna += g;
-      if (eater === P && big) floatText(f.x, f.y - 10, "+1 ДНК");
+      // есть можно всё, но своя еда (по питанию) даёт больше
+      const big = f.kind === "fry" || f.kind === "bug" || f.kind === "berry", good = EATS[f.kind](effDiet());
+      P.en += (big ? 12 : 8) * (good ? 1 : 0.6);
+      P.dna += eater === P ? (good ? (big ? 1 : 0.5) : 0.25) : 0.2;
+      if (eater === P) { addPts(FOOD_CAT[f.kind], 1); if (big && good) floatText(f.x, f.y - 10, "+1 ДНК"); }
       burst(f.x, f.y, foodColor(f.kind), 6, 70);
     }
   }
@@ -425,7 +488,7 @@ function step(dt) {
     let fx_ = tx, fy_ = ty;
     if (Math.hypot(k.x - P.x, k.y - P.y) < 260) {
       let best = 170 * 170;
-      for (const f of food) { if (!EATS[f.kind](node.diet)) continue; const dd = (f.x - k.x) ** 2 + (f.y - k.y) ** 2; if (dd < best) { best = dd; fx_ = f.x; fy_ = f.y; } }
+      for (const f of food) { const dd = (f.x - k.x) ** 2 + (f.y - k.y) ** 2; if (dd < best) { best = dd; fx_ = f.x; fy_ = f.y; } }
     }
     const ddx = fx_ - k.x, ddy = fy_ - k.y, dd = Math.hypot(ddx, ddy) || 1, sp = playerSpeed() * (dd > 60 ? 1.05 : 0.6);
     k.vx += (ddx / dd * sp - k.vx) * Math.min(1, dt * 3); k.vy += (ddy / dd * sp - k.vy) * Math.min(1, dt * 3);
@@ -471,8 +534,13 @@ function step(dt) {
     // игрок ест
     if (isFood && dP < R0 + e.r * 0.6) {
       npcs.splice(i, 1);
-      P.en += 25; P.dna += 3; P.hp = Math.min(100, P.hp + 5);
-      floatText(e.x, e.y - 14, "+3 ДНК"); burst(e.x, e.y, hsl(n.c, 10, 0.9), 14, 140);
+      // чем крупнее добыча, тем больше ДНК; хищникам — в полтора раза больше
+      const d = effDiet(), gain = Math.round(clamp(1 + (n.sz - node.sz + 3) * 1.1, 1, 6) * (d === "carn" || d === "omni" ? 1.5 : 1));
+      P.en += 25; P.dna += gain; P.hp = Math.min(100, P.hp + 5);
+      const first = !genes[n.id]; genes[n.id] = (genes[n.id] || 0) + 1;
+      floatText(e.x, e.y - 14, `+${gain} ДНК · гены`); burst(e.x, e.y, hsl(n.c, 10, 0.9), 14, 140);
+      if (first) toast(`Новые гены: ${n.name}. Теперь из него можно сделать гибрид`);
+      addPts("meat", 3 + Math.round(n.sz));
     }
   }
   while (npcs.length < (node.f.sessile ? 26 : 44)) spawnNpc(true);
@@ -489,7 +557,7 @@ function step(dt) {
 
 function hurt(e) {
   let dmg = 8 + (e.n.sz - node.sz) * 4;
-  if (node.f.shell || node.f.spikes || node.f.urchin) dmg *= 0.5;
+  if (node.f.shell || node.f.spikes || node.f.urchin || node.hy?.shell || node.hy?.spikes) dmg *= 0.5;
   P.hp -= dmg; P.inv = 0.3; cam.shake = 0.5;
   burst(P.x, P.y, "rgba(255,90,80,.95)", 12, 160);
   floatText(P.x, P.y - 26, "−" + Math.round(dmg), "#ff6b5e");
@@ -515,9 +583,29 @@ function die() {
   save();
 }
 
+// ---------- Питание ----------
+function addPts(kind, v) {
+  const p = P.pts; p[kind] = (p[kind] || 0) + v;
+  let nd = P.diet;
+  const best = Object.keys(p).reduce((a, b) => (p[a] >= p[b] ? a : b));
+  if (p.plant >= NEED && p.meat >= NEED && Math.min(p.plant, p.meat) / Math.max(p.plant, p.meat) >= 0.6) nd = "omni";
+  else if (p[best] >= NEED) nd = DIET_FROM[best];
+  if (nd === P.diet) return;
+  P.diet = nd;
+  toast({
+    herb: `Вы съели ${Math.floor(p.plant)} растений — теперь вы травоядный!`,
+    carn: `Вы набрали ${Math.floor(p.meat)} очков мяса — теперь вы хищник!`,
+    omni: "Вы едите и растения, и мясо — теперь вы всеядный!",
+    filter: `Вы съели ${Math.floor(p.tiny)} частиц — теперь вы фильтратор!`,
+    photo: "Вы набрали 100 очков света — теперь вы питаетесь светом!",
+  }[nd], true);
+  ring(P.x, P.y, "rgba(255,209,102,.9)", R0 * 5);
+  updateHud(true); save();
+}
+
 // ---------- Эволюция ----------
 function evolveTo(n) {
-  const cost = costOf(node);
+  const cost = costFor(n);
   if (P.dna < cost) return;
   P.dna -= cost;
   const from = node; node = n;
@@ -532,6 +620,21 @@ function evolveTo(n) {
   toast("Вы стали: " + n.name + (isNew ? " — новое существо!" : ""), true);
   save();
   if (!n.kids.length) setTimeout(() => { if (node === n && !anyModal()) openTop(); }, 900);
+}
+
+function makeHybridFrom(b) {
+  const cost = hybCost(b);
+  if (P.dna < cost || b === node) return;
+  P.dna -= cost;
+  const from = node, h = makeHybrid(node, b);
+  node = h;
+  const isNew = !disc.has(h.id); disc.add(h.id);
+  closeModals();
+  setupStage(from.hab !== h.hab);
+  P.hp = 100; P.en = Math.max(P.en, 70); P.inv = 1.5;
+  ring(P.x, P.y, "rgba(255,209,102,.95)", R0 * 6); ring(P.x, P.y, "rgba(79,224,192,.8)", R0 * 3.5); burst(P.x, P.y, "rgba(255,209,102,.95)", 40, 260);
+  toast("Гибрид готов: " + h.name + (isNew ? " — такого ещё не было!" : ""), true);
+  save();
 }
 
 function goBackTo(n) {
@@ -765,9 +868,15 @@ function drawPortrait() { drawMini($("portrait"), node, P.t, 0.3); }
 
 let hudAcc = 0;
 function updateHud(force) {
-  const cost = costOf(node);
+  const cost = node.kids.length ? Math.min(...node.kids.map(costFor)) : 0;
   $("name").textContent = node.name;
-  $("sub").textContent = `Ступень ${node.depth + 1} · ${HAB[node.hab]} · ${DIET[node.diet]}`;
+  $("sub").textContent = `Ступень ${node.depth + 1} · ${HAB[node.hab]} · ${P.diet ? DIET_TITLE[P.diet] + " ✓" : DIET[node.diet]}`;
+  const p = P.pts;
+  $("pts").innerHTML = PTS.filter(([k]) => k !== "sun" || p.sun >= 1 || node.diet === "photo").map(([k, ic, w]) => {
+    const on = P.diet === DIET_FROM[k] || (P.diet === "omni" && (k === "plant" || k === "meat"));
+    const v = Math.floor(p[k] || 0);
+    return `<span class="pt${on ? " on" : ""}" title="${w}: ${NEED} — и питание сменится">${ic} <b>${v}</b>${v < NEED ? "/" + NEED : ""}</span>`;
+  }).join("") + `<span class="pt" title="Сколько видов вы съели — из них можно делать гибриды">🧬 <b>${Object.keys(genes).length}</b></span>`;
   $("hpFill").style.width = clamp(P.hp, 0, 100) + "%"; $("hpTxt").textContent = Math.max(0, Math.round(P.hp));
   $("enFill").style.width = clamp(P.en, 0, 100) + "%"; $("enTxt").textContent = Math.round(P.en);
   const top = !node.kids.length;
@@ -777,53 +886,67 @@ function updateHud(force) {
   $("evoBtn").classList.toggle("ready", ready);
   $("evoBtn").textContent = top ? "Вершина" : ready ? "Эволюция!" : "Эволюция";
   if (force) {
-    let h = DIET_HINT[node.diet];
+    let h = DIET_HINT[effDiet()] + " Всех, кто меньше вас (зелёная метка), можно съесть.";
+    if (!P.diet) h += " 100 растений — станете травоядным, 100 очков мяса — хищником.";
     if (isCellLike(node)) h += " Когда энергии много — произойдёт митоз.";
-    $("hint").textContent = h + ` Открыто существ: ${disc.size} из ${TREE.length}.`;
+    $("hint").textContent = h + ` Открыто: ${[...disc].filter(id => BY_ID[id] && !BY_ID[id].hybrid).length} из ${TREE.length}.`;
   }
 }
 
+// Анимируем только те картинки в окнах, что видны на экране
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => { e.target._vis = e.isIntersecting; })) : null;
+function watchCanvas(c, n) { c._vis = !io; if (io) io.observe(c); drawMini(c, n, 1.3, 0.3); cardAnims.push([c, n]); }
+
 function anyModal() { return document.querySelector(".modal.open") !== null; }
 function openModal(id) { document.querySelectorAll(".modal").forEach(m => m.classList.toggle("open", m.id === id)); modalOpen = true; keys.clear(); ptr.down = false; }
-function closeModals() { document.querySelectorAll(".modal").forEach(m => m.classList.remove("open")); modalOpen = false; cardAnims = []; updateHud(true); }
+function closeModals() { document.querySelectorAll(".modal").forEach(m => m.classList.remove("open")); modalOpen = false; cardAnims = []; if (io) io.disconnect(); updateHud(true); }
 
 let cardAnims = [];
 function openEvolve() {
   if (!node.kids.length) { openTop(); return; }
-  const cost = costOf(node), can = P.dna >= cost;
+  cardAnims = []; if (io) io.disconnect();
+  const kids = node.kids.slice().sort((a, b) => dietMatch(b) - dietMatch(a));
+  const minCost = Math.min(...kids.map(costFor)), can = P.dna >= minCost;
   $("evoTitle").textContent = can ? "Куда эволюционировать?" : "Варианты эволюции";
-  $("evoLead").innerHTML = can
-    ? `Выберите следующую форму. Это стоит <b>${cost} ДНК</b>, у вас ${Math.floor(P.dna)}. Можно ещё поиграть и выбрать позже.`
-    : `Нужно <b>${cost} ДНК</b>, у вас ${Math.floor(P.dna)}. Ешьте и размножайтесь, чтобы накопить. Вот кем вы сможете стать:`;
-  const box = $("choices"); box.innerHTML = ""; cardAnims = [];
-  for (const k of node.kids) {
-    const el = document.createElement("div"); el.className = "choice";
+  $("evoLead").innerHTML = (can
+    ? `Выберите следующую форму. У вас <b>${Math.floor(P.dna)} ДНК</b>. Можно ещё поиграть и выбрать позже.`
+    : `Нужно от <b>${minCost} ДНК</b>, у вас ${Math.floor(P.dna)}. Ешьте и размножайтесь, чтобы накопить. Вот кем вы сможете стать (${kids.length}):`)
+    + (P.diet ? ` Вы — <b>${DIET_TITLE[P.diet]}</b>: существа с таким питанием на 25% дешевле.` : "");
+  const box = $("choices"); box.innerHTML = "";
+  for (const k of kids) {
+    const cost = costFor(k), ok = P.dna >= cost;
+    const el = document.createElement("div"); el.className = "choice"; el.dataset.name = k.name.toLowerCase();
     const tags = [`<span class="tag">${HAB[k.hab]}</span>`, `<span class="tag">${DIET[k.diet]}</span>`];
+    if (dietMatch(k)) tags.push(`<span class="tag top">ваше питание −25%</span>`);
     if (!k.kids.length) tags.push(`<span class="tag top">вершина ветки</span>`);
     else tags.push(`<span class="tag">дальше ещё ${k.desc_n}</span>`);
     if (!disc.has(k.id)) tags.push(`<span class="tag new">новое</span>`);
     el.innerHTML = `<canvas width="400" height="240"></canvas><h3>${k.name}</h3><p>${k.desc}</p><div class="tags">${tags.join("")}</div>`;
-    const b = document.createElement("button"); b.className = can ? "primary" : ""; b.disabled = !can; b.textContent = can ? "Стать" : `Нужно ${cost} ДНК`;
+    const b = document.createElement("button"); b.className = ok ? "primary" : ""; b.disabled = !ok; b.textContent = ok ? `Стать (${cost} ДНК)` : `Нужно ${cost} ДНК`;
     b.onclick = () => evolveTo(k); el.appendChild(b);
     box.appendChild(el);
-    cardAnims.push([el.querySelector("canvas"), k]);
+    watchCanvas(el.querySelector("canvas"), k);
   }
+  const se = $("evoSearch"); se.hidden = kids.length < 10; se.value = "";
+  se.oninput = () => { const q = se.value.trim().toLowerCase(); box.querySelectorAll(".choice").forEach(el => { el.hidden = q && !el.dataset.name.includes(q); }); };
   openModal("evoModal");
 }
 
 function openPath(tab = "path") {
-  const chain = []; let p = node; while (p) { chain.unshift(p); p = p.parent ? BY_ID[p.parent] : null; }
+  cardAnims = []; if (io) io.disconnect();
+  const chain = []; let p = node; while (p) { chain.unshift(p); p = p.parent ? getNode(p.parent) : null; }
   const pt = $("pathTab"); pt.innerHTML = `<h2>Ваш путь</h2><p class="lead">${chain.length} ступеней от первой клетки. Можно вернуться к любой развилке и пойти по другой ветке — открытые существа сохранятся, а накопленная ДНК сгорит.</p><div class="path"></div>`;
   const list = pt.querySelector(".path");
   chain.forEach((n, i) => {
     const el = document.createElement("div"); el.className = "step" + (n === node ? " cur" : "");
-    const others = n.kids.length > 1 ? ` · развилка: ${n.kids.length} пути` : "";
+    const others = n.hybrid ? " · гибрид" : n.kids.length > 1 ? ` · развилка: ${n.kids.length} пути` : "";
     el.innerHTML = `<canvas width="88" height="88"></canvas><div><b>${i + 1}. ${n.name}</b><span>${HAB[n.hab]} · ${DIET[n.diet]}${others}</span></div>`;
-    if (n !== node) { const b = document.createElement("button"); b.textContent = "Вернуться"; b.onclick = () => goBackTo(n); el.appendChild(b); }
+    if (n !== node && !n.hybrid) { const b = document.createElement("button"); b.textContent = "Вернуться"; b.onclick = () => goBackTo(n); el.appendChild(b); }
     list.appendChild(el); drawMini(el.querySelector("canvas"), n, 1.3, 0.3);
   });
   const ct = $("collTab"); const tops = TREE.filter(n => !n.kids.length), topsFound = tops.filter(n => disc.has(n.id)).length;
-  ct.innerHTML = `<h2>Коллекция</h2><p class="lead"><span class="big-n">${disc.size}</span> / ${TREE.length} существ открыто · вершин ветвей: ${topsFound} из ${tops.length}</p><div class="coll"></div>`;
+  const found = TREE.filter(n => disc.has(n.id)).length;
+  ct.innerHTML = `<h2>Коллекция</h2><p class="lead"><span class="big-n">${found}</span> / ${TREE.length} существ открыто · вершин ветвей: ${topsFound} из ${tops.length} · съедено видов: ${Object.keys(genes).length}</p><div class="coll"></div>`;
   const grid = ct.querySelector(".coll");
   for (const n of TREE_ORDER) {
     const el = document.createElement("div"); const known = disc.has(n.id);
@@ -831,31 +954,93 @@ function openPath(tab = "path") {
     el.innerHTML = known ? `<canvas width="128" height="104"></canvas>${n.name}` : `<i>?</i>???`;
     grid.appendChild(el); if (known) drawMini(el.querySelector("canvas"), n, 1.3, 0.3);
   }
+  const ht = $("hybTab"), made = [...disc].filter(id => id.startsWith("h(")).map(getNode).filter(Boolean);
+  ht.innerHTML = `<h2>Гибриды</h2><p class="lead"><span class="big-n">${made.length}</span> создано · возможно больше <b>${(TREE.length * (TREE.length - 1)).toLocaleString("ru")}</b> гибридов. Гибрид делается в лаборатории — кнопка «Гибрид».</p><div class="coll"></div>`;
+  const hg = ht.querySelector(".coll");
+  for (const n of made) { const el = document.createElement("div"); el.className = "cell"; el.innerHTML = `<canvas width="128" height="104"></canvas>${n.name}`; hg.appendChild(el); drawMini(el.querySelector("canvas"), n, 1.3, 0.3); }
   setTab(tab); openModal("pathModal");
 }
 function setTab(tab) {
   document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  $("pathTab").hidden = tab !== "path"; $("collTab").hidden = tab !== "coll";
+  $("pathTab").hidden = tab !== "path"; $("collTab").hidden = tab !== "coll"; $("hybTab").hidden = tab !== "hyb";
 }
 document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+
+// ---------- Лаборатория гибридов ----------
+let hybSel = null, hybLimit = 120;
+function openHybrid() {
+  cardAnims = []; if (io) io.disconnect();
+  hybSel = null; hybLimit = 120;
+  $("hybLead").innerHTML = `Скрестите себя (<b>${node.name}</b>) с любым существом. Гибрид получит <b>тело и среду</b> второго существа, а <b>окрас и черты</b> — ваши. `
+    + `Если вы ели это существо (🧬) или уже были им (✓), гибрид стоит дешевле. У вас <b>${Math.floor(P.dna)} ДНК</b>.`;
+  $("hybSearch").value = "";
+  renderPartners();
+  showHybrid(null);
+  openModal("hybModal");
+}
+function partnerList(q) {
+  const sc = n => (genes[n.id] || 0) * 1000 + (disc.has(n.id) ? 500 : 0);
+  return TREE.filter(n => n !== node && n.id !== node.pb && (!q || n.name.toLowerCase().includes(q)))
+    .map(n => [n, sc(n)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+}
+function renderPartners() {
+  const q = $("hybSearch").value.trim().toLowerCase(), list = partnerList(q), box = $("partners");
+  box.innerHTML = "";
+  for (const n of list.slice(0, hybLimit)) {
+    const b = document.createElement("button");
+    b.className = n === hybSel ? "sel" : "";
+    b.innerHTML = n.name + (genes[n.id] ? `<small>🧬${genes[n.id]}</small>` : disc.has(n.id) ? "<small>✓</small>" : "");
+    b.onclick = () => { hybSel = n; box.querySelectorAll("button").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); showHybrid(n); };
+    box.appendChild(b);
+  }
+  if (list.length > hybLimit) {
+    const m = document.createElement("button"); m.className = "more"; m.textContent = `Показать ещё (всего ${list.length})`;
+    m.onclick = () => { hybLimit += 200; renderPartners(); };
+    box.appendChild(m);
+  }
+  if (!list.length) box.innerHTML = `<p class="lead">Никого не нашлось.</p>`;
+}
+function showHybrid(b) {
+  const btn = $("hybMake");
+  if (!b) {
+    $("hybName").textContent = "Выберите существо"; $("hybDesc").textContent = "Справа — все существа. Сверху те, чьи гены у вас есть.";
+    $("hybTags").innerHTML = ""; btn.disabled = true; btn.textContent = "Создать гибрид";
+    cardAnims = [[$("hybCanvas"), node]]; $("hybCanvas")._vis = true; return;
+  }
+  const h = makeHybrid(node, b), cost = hybCost(b), ok = P.dna >= cost;
+  $("hybName").textContent = h.name;
+  $("hybDesc").textContent = h.desc;
+  const tags = [`<span class="tag">${HAB[h.hab]}</span>`, `<span class="tag">размер ${h.sz}</span>`];
+  if (h.f.fly) tags.push(`<span class="tag">летает</span>`);
+  if (h.hy.shell || h.hy.spikes) tags.push(`<span class="tag">защита</span>`);
+  if (!disc.has(h.id)) tags.push(`<span class="tag new">новый гибрид</span>`);
+  if (!genes[b.id] && !disc.has(b.id)) tags.push(`<span class="tag">нет генов — цена ×2</span>`);
+  $("hybTags").innerHTML = tags.join("");
+  btn.disabled = !ok; btn.textContent = ok ? `Создать гибрид (${cost} ДНК)` : `Нужно ${cost} ДНК`;
+  btn.onclick = () => makeHybridFrom(b);
+  cardAnims = [[$("hybCanvas"), h]]; $("hybCanvas")._vis = true;
+}
+$("hybSearch").oninput = () => { hybLimit = 120; renderPartners(); };
 
 function openTop() {
   const tops = TREE.filter(n => !n.kids.length), found = tops.filter(n => disc.has(n.id)).length;
   $("topTitle").textContent = "Вершина эволюции: " + node.name;
   $("topLead").innerHTML = `${node.desc}<br><br>Вы прошли путь из <b>${node.depth + 1} ступеней</b> от первой клетки. Это одна из ${tops.length} вершин древа — открыто ${found}. Всего существ открыто: ${disc.size} из ${TREE.length}. Вернитесь к развилке и попробуйте другую ветку!`;
-  cardAnims = [[$("topCanvas"), node]];
+  cardAnims = [[$("topCanvas"), node]]; $("topCanvas")._vis = true;
   openModal("topModal");
 }
 
 $("evoBtn").onclick = () => openEvolve();
 $("pathBtn").onclick = () => openPath();
+$("hybBtn").onclick = () => openHybrid();
+$("hybClose").onclick = () => closeModals();
 $("pauseBtn").onclick = () => togglePause();
 $("evoClose").onclick = () => closeModals();
 $("pathClose").onclick = () => closeModals();
 $("topPlay").onclick = () => closeModals();
 $("topBack").onclick = () => openPath("path");
 $("topNew").onclick = () => goBackTo(BY_ID.luca);
-$("newBtn").onclick = () => { node = BY_ID.luca; P.dna = 0; kin = []; P.hp = 100; P.en = 80; closeModals(); setupStage(true); toast("Где-то в тёплом океане 4 миллиарда лет назад…", true); save(); };
+$("newBtn").onclick = () => { node = BY_ID.luca; P.dna = 0; kin = []; P.pts = { plant: 0, meat: 0, tiny: 0, sun: 0 }; P.diet = null; P.hp = 100; P.en = 80; closeModals(); setupStage(true); toast("Где-то в тёплом океане 4 миллиарда лет назад…", true); save(); };
 $("contBtn").onclick = () => { closeModals(); toast("С возвращением: " + node.name, true); };
 document.querySelectorAll(".modal").forEach(m => m.addEventListener("pointerdown", e => { if (e.target === m && m.id !== "introModal") closeModals(); }));
 
@@ -879,15 +1064,18 @@ function frame(now) {
   drawWorld(simT);
   ctx.restore();
   hudAcc += dt; if (hudAcc > 0.12) { hudAcc = 0; updateHud(); drawPortrait(); }
-  for (const [c, n] of cardAnims) drawMini(c, n, now / 1000, 0.3);
+  for (const [c, n] of cardAnims) if (c._vis) drawMini(c, n, now / 1000, 0.3);
   requestAnimationFrame(frame);
 }
 
 resize();
 $("totalN").textContent = TREE.length;
+$("hybN").textContent = (TREE.length * (TREE.length - 1)).toLocaleString("ru");
 const saved = load();
 if (saved) {
-  node = BY_ID[saved.node]; P.dna = saved.dna || 0; disc = new Set(saved.disc || ["luca"]); disc.add(node.id);
+  node = getNode(saved.node); P.dna = saved.dna || 0; disc = new Set(saved.disc || ["luca"]); disc.add(node.id);
+  if (saved.pts) P.pts = { plant: 0, meat: 0, tiny: 0, sun: 0, ...saved.pts };
+  P.diet = saved.diet || null; genes = saved.genes || {};
   $("contBtn").hidden = false; $("contBtn").textContent = "Продолжить: " + node.name;
 }
 setupStage(true);
