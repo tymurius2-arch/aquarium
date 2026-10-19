@@ -24,7 +24,7 @@ N("chlamy", "euk", "Хламидомонада", "cell", "micro", "photo", 1.6, 
 N("diatom", "chlamy", "Диатомея", "cell", "micro", "photo", 1.4, [48, 60, 60], "Живёт в стеклянной шкатулке с тонким узором.", { glass: 1 });
 N("volvox", "chlamy", "Вольвокс", "colony", "micro", "photo", 2.5, [110, 60, 48], "Шар из тысяч зелёных клеток, внутри — дочерние шарики.", { sphere: 1 });
 N("kelp", "volvox", "Ламинария", "plant", "water", "photo", 5, [40, 55, 35], "Гигантская бурая водоросль — целый подводный лес.", { kelp: 1, sessile: 1 });
-N("moss", "volvox", "Мох", "plant", "land", "photo", 3, [100, 55, 38], "Первые растения выходят на сушу и делают её зелёной.", { moss: 1, sessile: 1 });
+N("moss", "chara", "Мох", "plant", "land", "photo", 3, [100, 55, 38], "Первые растения выходят на сушу и делают её зелёной.", { moss: 1, sessile: 1 });
 N("choano", "euk", "Воротничковый жгутиконосец", "cell", "micro", "filter", 1.7, [200, 60, 60], "Клетка со жгутиком и воротничком — предок всех животных.", { nucleus: 1, flag: 1, collar: 1 });
 N("colony", "choano", "Колония клеток", "colony", "micro", "filter", 2.3, [205, 55, 60], "Клетки остались вместе и начали делить работу.", {});
 
@@ -200,10 +200,29 @@ N("sapiens", "erectus", "Человек разумный", "biped", "land", "omn
 // Вызывается один раз, когда загружены все существа (в конце animals.js).
 const BY_ID = {};
 const TREE_ORDER = [];
+// Главные линии: по ним любая ветка доходит хотя бы до земноводных (животные) или до цветковых (растения).
+const MAIN_ANIMAL = ["luca", "euk", "choano", "colony", "flat", "lance", "jawless", "placo", "bony", "lobe", "tikta", "amph"];
+const MAIN_PLANT = ["chlamy", "volvox", "spiro", "chara", "moss", "fern", "gymno", "flower"];
 function linkTree() {
-  for (const n of TREE) { n.kids = []; BY_ID[n.id] = n; }
+  for (const n of TREE) { n.kids = []; n.links = []; BY_ID[n.id] = n; }
   for (const n of TREE) if (n.parent) BY_ID[n.parent].kids.push(n);
   for (const n of TREE) { let d = 0, p = n; while (p.parent) { d++; p = BY_ID[p.parent]; } n.depth = d; }
   (function countDesc(n) { n.desc_n = 0; for (const k of n.kids) n.desc_n += 1 + countDesc(k); return n.desc_n; })(BY_ID.luca);
   (function walk(n) { TREE_ORDER.push(n); n.kids.forEach(walk); })(BY_ID.luca);
+
+  // Тупики раньше земноводных получают переход на следующую ступень главной линии.
+  const under = (n, id) => { for (let p = n; p; p = p.parent ? BY_ID[p.parent] : null) if (p.id === id) return true; return false; };
+  for (const n of TREE) {
+    if (n.f.next) { n.links = n.f.next.map(id => BY_ID[id]); continue; }
+    if (n.kids.length || under(n, "amph") || under(n, "flower")) continue;
+    for (let p = BY_ID[n.parent]; p; p = p.parent ? BY_ID[p.parent] : null) {
+      const line = MAIN_ANIMAL.includes(p.id) ? MAIN_ANIMAL : MAIN_PLANT.includes(p.id) ? MAIN_PLANT : null;
+      if (!line) continue;
+      const next = BY_ID[line[line.indexOf(p.id) + 1]];
+      if (next) n.links = [next];
+      break;
+    }
+  }
+  // переходы показываются вместе с обычными потомками
+  for (const n of TREE) if (n.links.length) n.kids = [...n.kids, ...n.links];
 }

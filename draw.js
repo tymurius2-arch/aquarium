@@ -205,7 +205,85 @@ function drawCoral(g, n, r, t) {
   g.fillStyle = shade(g, 0, 0, r * 0.3, c); circ(g, 0, 0, r * 0.3); g.fill();
 }
 function drawPlant(g, n, r, t) {
-  const c = n.c, f = n.f;
+  const c = n.c, f = n.f, sway = Math.sin(t * 1.3) * 0.08;
+  const petals = (R, col, k = 6) => {
+    for (let i = 0; i < k; i++) { const a = i / k * TAU + t * 0.2; g.fillStyle = shade(g, Math.cos(a) * R * 0.6, Math.sin(a) * R * 0.6, R * 0.5, col); ell(g, Math.cos(a) * R * 0.6, Math.sin(a) * R * 0.6, R * 0.55, R * 0.28, a); g.fill(); }
+    g.fillStyle = "hsl(45,90%,55%)"; circ(g, 0, 0, R * 0.32); g.fill();
+  };
+  if (f.filament) { // нить водоросли
+    for (let i = -4; i <= 4; i++) {
+      const x = i * r * 0.32, y = Math.sin(t + i * 0.7) * r * 0.08;
+      g.fillStyle = shade(g, x, y, r * 0.2, c, 0.85); g.beginPath(); g.roundRect(x - r * 0.15, y - r * 0.12, r * 0.3, r * 0.24, r * 0.06); g.fill();
+      line(g, [x - r * 0.12, y - r * 0.08, x - r * 0.04, y + r * 0.08, x + r * 0.04, y - r * 0.08, x + r * 0.12, y + r * 0.08], r * 0.03, "hsla(120,70%,28%,.9)");
+    }
+    return;
+  }
+  if (f.chara) { // стебель с мутовками веточек (харовая водоросль, хвощ)
+    line(g, [-r, 0, r, 0], r * 0.08, hsl(c, -10));
+    for (const x of [-0.65, 0, 0.65]) for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + sway; line(g, [x * r, 0, x * r + Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42], r * 0.04, hsl(c, (k % 2) * 8)); }
+    return;
+  }
+  if (f.fern) { // листья-вайи
+    for (let i = 0; i < 6; i++) {
+      const a = i / 6 * TAU + sway;
+      line(g, [0, 0, Math.cos(a) * r * 1.2, Math.sin(a) * r * 1.2], r * 0.05, hsl(c, -12));
+      for (let k = 1; k <= 6; k++) {
+        const q = k / 7, px = Math.cos(a) * r * 1.2 * q, py = Math.sin(a) * r * 1.2 * q, l = r * 0.3 * (1 - q * 0.6);
+        for (const sd of [-1, 1]) { g.fillStyle = hsl(c, (k % 2) * 6); ell(g, px + Math.cos(a + sd * 1.2) * l * 0.5, py + Math.sin(a + sd * 1.2) * l * 0.5, l * 0.5, l * 0.18, a + sd * 1.2); g.fill(); }
+      }
+    }
+    return;
+  }
+  if (f.needles) { // хвойное дерево сверху
+    for (let ring = 3; ring >= 1; ring--) {
+      const R = r * 0.36 * ring;
+      g.fillStyle = shade(g, 0, 0, R, [c[0], c[1], c[2] + (3 - ring) * 5]); circ(g, 0, 0, R); g.fill();
+      for (let k = 0; k < ring * 12; k++) { const a = k / (ring * 12) * TAU + ring; line(g, [Math.cos(a) * R * 0.6, Math.sin(a) * R * 0.6, Math.cos(a) * R * 1.06, Math.sin(a) * R * 1.06], r * 0.025, hsl(c, 14, 0.6)); }
+    }
+    return;
+  }
+  if (f.grass) { // пучок травинок
+    for (let i = 0; i < 24; i++) {
+      const a = i * 2.4, len = r * (0.7 + (i % 5) * 0.12), w = Math.sin(t * 1.6 + i) * 0.15;
+      const ex = Math.cos(a + w * 1.6) * len, ey = Math.sin(a + w * 1.6) * len;
+      line(g, [0, 0, Math.cos(a + w) * len * 0.5, Math.sin(a + w) * len * 0.5, ex, ey], r * 0.06, hsl(c, (i % 3) * 6));
+      if (f.ears && i % 3 === 0) { g.fillStyle = "hsl(42,75%,58%)"; ell(g, ex, ey, r * 0.12, r * 0.05, a); g.fill(); }
+    }
+    return;
+  }
+  if (f.tree) { // крона дерева
+    for (let k = 0; k < 6; k++) {
+      const a = k * 1.25, d = k ? r * 0.5 : 0, rr = k ? r * 0.55 : r * 0.7;
+      g.fillStyle = shade(g, Math.cos(a) * d, Math.sin(a) * d, rr, [c[0] + k * 3, c[1], c[2] + (k % 2) * 4]); circ(g, Math.cos(a) * d, Math.sin(a) * d, rr); g.fill();
+    }
+    if (f.fruit) for (let k = 0; k < 9; k++) { g.fillStyle = "hsl(0,80%,48%)"; circ(g, Math.cos(k * 2.3) * r * 0.75, Math.sin(k * 2.3) * r * 0.75, r * 0.1); g.fill(); }
+    return;
+  }
+  if (f.cactus) {
+    g.fillStyle = shade(g, 0, 0, r * 0.7, c); circ(g, 0, 0, r * 0.7); g.fill();
+    for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; line(g, [0, 0, Math.cos(a) * r * 0.68, Math.sin(a) * r * 0.68], r * 0.03, hsl(c, -15, 0.7)); for (const q of [0.35, 0.6, 0.8]) line(g, [Math.cos(a) * r * q, Math.sin(a) * r * q, Math.cos(a + 0.1) * r * (q + 0.12), Math.sin(a + 0.1) * r * (q + 0.12)], r * 0.015, "#f3f0e0"); }
+    if (f.fc) petals(r * 0.25, f.fc, 5);
+    return;
+  }
+  if (f.trap) { // венерина мухоловка: листья-капканы хлопают
+    for (let i = 0; i < 4; i++) {
+      const a = i / 4 * TAU + 0.4, open = 0.25 + 0.75 * Math.abs(Math.sin(t * 1.5 + i)), x = Math.cos(a) * r * 0.75, y = Math.sin(a) * r * 0.75;
+      line(g, [0, 0, x, y], r * 0.06, hsl(c, -10));
+      for (const sd of [-1, 1]) {
+        const ox = x + Math.cos(a + sd * Math.PI / 2) * r * 0.14 * open, oy = y + Math.sin(a + sd * Math.PI / 2) * r * 0.14 * open;
+        g.fillStyle = "hsl(0,65%,45%)"; ell(g, ox, oy, r * 0.3, r * 0.14, a); g.fill();
+        g.strokeStyle = hsl(c, 10); g.lineWidth = r * 0.04; g.stroke();
+        for (let k = -2; k <= 2; k++) { const tx = ox + Math.cos(a) * k * r * 0.1, ty = oy + Math.sin(a) * k * r * 0.1; line(g, [tx, ty, tx + Math.cos(a + sd * Math.PI / 2) * r * 0.16, ty + Math.sin(a + sd * Math.PI / 2) * r * 0.16], r * 0.02, hsl(c, 20)); }
+      }
+    }
+    return;
+  }
+  if (f.lily) { // кувшинка: лист на воде и цветок
+    g.fillStyle = shade(g, 0, 0, r, [120, 50, 35]); g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, r * 0.95, 0.3, TAU - 0.3); g.closePath(); g.fill();
+    g.strokeStyle = "hsla(120,40%,25%,.6)"; g.lineWidth = r * 0.02; for (let k = 1; k < 8; k++) { const a = 0.3 + k / 8 * (TAU - 0.6); line(g, [0, 0, Math.cos(a) * r * 0.9, Math.sin(a) * r * 0.9], r * 0.02, "hsla(120,40%,25%,.6)"); }
+    petals(r * 0.45, f.fc || [330, 60, 75], 8);
+    return;
+  }
   if (f.moss) {
     for (let i = 0; i < 16; i++) {
       const a = i * 2.4, d = r * 0.85 * Math.sqrt((i + 0.5) / 16), x = Math.cos(a) * d, y = Math.sin(a) * d;
@@ -221,6 +299,7 @@ function drawPlant(g, n, r, t) {
     line(g, [0, 0, Math.cos(a) * r * 1.8, Math.sin(a) * r * 1.8], r * 0.03, hsl(c, 15, 0.6));
   }
   g.fillStyle = shade(g, 0, 0, r * 0.35, [c[0], c[1], c[2] - 8]); circ(g, 0, 0, r * 0.35); g.fill();
+  if (f.flower) { petals(r * (f.big ? 0.75 : 0.5), f.fc || [330, 60, 70]); return; }
   for (let i = 0; i < 3; i++) { g.fillStyle = hsl(c, 15); circ(g, r * 0.15 * Math.cos(i * 2), r * 0.15 * Math.sin(i * 2), r * 0.12); g.fill(); }
 }
 

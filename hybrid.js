@@ -77,6 +77,7 @@ function makeHybrid(a, b) {
     sz: Math.round((a.sz + b.sz) / 2 * 10) / 10, c: mixColor(a.c, b.c),
     desc: `Гибрид: ${a.name} × ${b.name}. Тело и среда от «${b.name}», окрас и черты от «${a.name}».`,
     f, hy, hybrid: true, pa: a.id, pb: b.id, pre, kids, depth: a.depth + 1, desc_n: 0,
+    links: kids.filter(k => (a.links || []).includes(k) || (b.links || []).includes(k)),
   };
   BY_ID[id] = n;
   return n;

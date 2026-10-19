@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Эволюция: от клетки до гибридов</title>
-<meta name="description" content="Играй за первую клетку и эволюционируй: выбирай, в кого превратиться, и пройди путь до человека, собаки, мыши, гориллы или одного из 1300 существ. Ешь всех, кто меньше, и создавай гибриды.">
+<meta name="description" content="Играй за первую клетку и эволюционируй: выбирай, в кого превратиться, и пройди путь до человека, собаки, мыши, гориллы или одного из 1400 существ. Ешь всех, кто меньше, и создавай гибриды.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
@@ -164,6 +164,7 @@
     <p class="lead">Вы — первая клетка в тёплом древнем океане. Ешьте, растите и копите <b>ДНК</b>. Когда её хватит — выберите, в кого превратиться дальше. Каждый выбор ведёт по своей ветке: можно стать человеком, собакой, мышью, гориллой, акулой, бабочкой или одним из <b id="totalN">160</b> существ.</p>
     <p class="lead"><b>Ешьте всех, кто меньше вас</b> — за это дают ДНК и <b>гены</b> съеденного. Кем вы станете, зависит от еды: съешьте 100 растений 🌿 — станете <b>травоядным</b>, наберите 100 очков мяса 🍖 — <b>хищником</b>, и то и другое — <b>всеядным</b>. Эволюция в существо с вашим питанием дешевле.</p>
     <p class="lead">Кнопка <b>«Гибрид»</b> — лаборатория: скрестите себя с любым существом и получите крысо-динозавра, акуло-орла или ещё одного из <b id="hybN">миллиона</b> гибридов.</p>
+    <p class="lead">Любой путь ведёт хотя бы до <b>земноводных</b> — первых зверей на суше — или, если стать водорослью, до <b>травы, цветов и деревьев</b>. Где ветка кончается раньше, появляется переход дальше.</p>
     <p class="lead">На каждой ступени играйте сколько хотите. Когда энергии много, клетка сама делится — это <b>митоз</b>, а у животных появляется потомство, которое следует за вами.</p>
     <p class="lead"><b>Управление:</b> зажмите мышь или палец — существо поплывёт туда. На клавиатуре — WASD или стрелки. Пробел — рывок. E — эволюция, H — гибрид, P — пауза.<br>Зелёная метка — это можно съесть. Красная — опасный хищник, убегайте.</p>
     <div class="foot">
@@ -279,6 +280,8 @@ let W = 0, H = 0, DPR = 1, VS = 1;
 let node = BY_ID.luca, disc = new Set(["luca"]);
 const P = { x: WORLD / 2, y: WORLD / 2, vx: 0, vy: 0, ang: 0, hp: 100, en: 80, dna: 0, dashT: 0, dashCd: 0, inv: 0, mv: 0, t: 0, repro: 0, pts: { plant: 0, meat: 0, tiny: 0, sun: 0 }, diet: null };
 let genes = {}; // id существа → сколько раз съели (гены для гибридов)
+let hist = ["luca"]; // настоящий путь игрока: ветки бывают с переходами, поэтому храним его отдельно
+const chainOf = n => { const c = []; for (let p = n; p; p = p.parent ? getNode(p.parent) : null) c.unshift(p.id); return c; };
 const effDiet = () => P.diet || node.diet;
 let npcs = [], food = [], kin = [], fx = [], floats = [], lights = [], decor = null;
 let paused = false, modalOpen = true, cam = { x: P.x, y: P.y, shake: 0 }, simT = 0, curHab = null;
@@ -287,7 +290,7 @@ let pool = [];
 
 // ---------- Сохранение ----------
 function save() {
-  try { localStorage.setItem("evo-save", JSON.stringify({ node: node.id, dna: P.dna, disc: [...disc], pts: P.pts, diet: P.diet, genes })); } catch (e) {}
+  try { localStorage.setItem("evo-save", JSON.stringify({ node: node.id, dna: P.dna, disc: [...disc], pts: P.pts, diet: P.diet, genes, hist })); } catch (e) {}
 }
 function load() {
   try { const s = JSON.parse(localStorage.getItem("evo-save")); if (s && getNode(s.node)) return s; } catch (e) {}
@@ -608,7 +611,7 @@ function evolveTo(n) {
   const cost = costFor(n);
   if (P.dna < cost) return;
   P.dna -= cost;
-  const from = node; node = n;
+  const from = node; node = n; hist.push(n.id);
   const isNew = !disc.has(n.id); disc.add(n.id);
   closeModals();
   if (from.hab !== n.hab) {
@@ -627,7 +630,7 @@ function makeHybridFrom(b) {
   if (P.dna < cost || b === node) return;
   P.dna -= cost;
   const from = node, h = makeHybrid(node, b);
-  node = h;
+  node = h; hist.push(h.id);
   const isNew = !disc.has(h.id); disc.add(h.id);
   closeModals();
   setupStage(from.hab !== h.hab);
@@ -638,6 +641,7 @@ function makeHybridFrom(b) {
 }
 
 function goBackTo(n) {
+  const i = hist.lastIndexOf(n.id); hist = i >= 0 ? hist.slice(0, i + 1) : chainOf(n);
   node = n; P.dna = 0; kin = []; P.hp = 100; P.en = 80;
   closeModals(); setupStage(true);
   toast("Вы вернулись к развилке: " + n.name, true);
@@ -911,12 +915,14 @@ function openEvolve() {
   $("evoLead").innerHTML = (can
     ? `Выберите следующую форму. У вас <b>${Math.floor(P.dna)} ДНК</b>. Можно ещё поиграть и выбрать позже.`
     : `Нужно от <b>${minCost} ДНК</b>, у вас ${Math.floor(P.dna)}. Ешьте и размножайтесь, чтобы накопить. Вот кем вы сможете стать (${kids.length}):`)
-    + (P.diet ? ` Вы — <b>${DIET_TITLE[P.diet]}</b>: существа с таким питанием на 25% дешевле.` : "");
+    + (P.diet ? ` Вы — <b>${DIET_TITLE[P.diet]}</b>: существа с таким питанием на 25% дешевле.` : "")
+    + (node.f.next ? " Отсюда можно пойти и к растениям, и к животным." : node.links && node.links.length && node.links.length === node.kids.length ? " Эта ветка дальше не идёт, но эволюция продолжается — вот переход на новую ступень." : "");
   const box = $("choices"); box.innerHTML = "";
   for (const k of kids) {
     const cost = costFor(k), ok = P.dna >= cost;
     const el = document.createElement("div"); el.className = "choice"; el.dataset.name = k.name.toLowerCase();
     const tags = [`<span class="tag">${HAB[k.hab]}</span>`, `<span class="tag">${DIET[k.diet]}</span>`];
+    if (node.links && node.links.includes(k)) tags.push(`<span class="tag new">${MAIN_PLANT.includes(k.id) ? "путь к растениям" : "путь к земноводным"}</span>`);
     if (dietMatch(k)) tags.push(`<span class="tag top">ваше питание −25%</span>`);
     if (!k.kids.length) tags.push(`<span class="tag top">вершина ветки</span>`);
     else tags.push(`<span class="tag">дальше ещё ${k.desc_n}</span>`);
@@ -934,12 +940,12 @@ function openEvolve() {
 
 function openPath(tab = "path") {
   cardAnims = []; if (io) io.disconnect();
-  const chain = []; let p = node; while (p) { chain.unshift(p); p = p.parent ? getNode(p.parent) : null; }
+  const chain = hist.map(getNode).filter(Boolean);
   const pt = $("pathTab"); pt.innerHTML = `<h2>Ваш путь</h2><p class="lead">${chain.length} ступеней от первой клетки. Можно вернуться к любой развилке и пойти по другой ветке — открытые существа сохранятся, а накопленная ДНК сгорит.</p><div class="path"></div>`;
   const list = pt.querySelector(".path");
   chain.forEach((n, i) => {
     const el = document.createElement("div"); el.className = "step" + (n === node ? " cur" : "");
-    const others = n.hybrid ? " · гибрид" : n.kids.length > 1 ? ` · развилка: ${n.kids.length} пути` : "";
+    const others = n.hybrid ? " · гибрид" : n.kids.length > 1 ? ` · развилка: ${n.kids.length} путей` : "";
     el.innerHTML = `<canvas width="88" height="88"></canvas><div><b>${i + 1}. ${n.name}</b><span>${HAB[n.hab]} · ${DIET[n.diet]}${others}</span></div>`;
     if (n !== node && !n.hybrid) { const b = document.createElement("button"); b.textContent = "Вернуться"; b.onclick = () => goBackTo(n); el.appendChild(b); }
     list.appendChild(el); drawMini(el.querySelector("canvas"), n, 1.3, 0.3);
@@ -1039,8 +1045,8 @@ $("evoClose").onclick = () => closeModals();
 $("pathClose").onclick = () => closeModals();
 $("topPlay").onclick = () => closeModals();
 $("topBack").onclick = () => openPath("path");
-$("topNew").onclick = () => goBackTo(BY_ID.luca);
-$("newBtn").onclick = () => { node = BY_ID.luca; P.dna = 0; kin = []; P.pts = { plant: 0, meat: 0, tiny: 0, sun: 0 }; P.diet = null; P.hp = 100; P.en = 80; closeModals(); setupStage(true); toast("Где-то в тёплом океане 4 миллиарда лет назад…", true); save(); };
+$("topNew").onclick = () => { hist = ["luca"]; goBackTo(BY_ID.luca); };
+$("newBtn").onclick = () => { node = BY_ID.luca; hist = ["luca"]; P.dna = 0; kin = []; P.pts = { plant: 0, meat: 0, tiny: 0, sun: 0 }; P.diet = null; P.hp = 100; P.en = 80; closeModals(); setupStage(true); toast("Где-то в тёплом океане 4 миллиарда лет назад…", true); save(); };
 $("contBtn").onclick = () => { closeModals(); toast("С возвращением: " + node.name, true); };
 document.querySelectorAll(".modal").forEach(m => m.addEventListener("pointerdown", e => { if (e.target === m && m.id !== "introModal") closeModals(); }));
 
@@ -1076,6 +1082,7 @@ if (saved) {
   node = getNode(saved.node); P.dna = saved.dna || 0; disc = new Set(saved.disc || ["luca"]); disc.add(node.id);
   if (saved.pts) P.pts = { plant: 0, meat: 0, tiny: 0, sun: 0, ...saved.pts };
   P.diet = saved.diet || null; genes = saved.genes || {};
+  hist = Array.isArray(saved.hist) && saved.hist[saved.hist.length - 1] === node.id && saved.hist.every(getNode) ? saved.hist : chainOf(node);
   $("contBtn").hidden = false; $("contBtn").textContent = "Продолжить: " + node.name;
 }
 setupStage(true);
